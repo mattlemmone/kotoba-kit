@@ -1,6 +1,6 @@
 # KotobaKit
 
-A command-line tool that generates Japanese text-to-speech audio and creates Anki flashcards.
+A command-line tool that generates Japanese text-to-speech audio and uses them to create Anki flashcards.
 
 ## Features
 
@@ -17,22 +17,6 @@ A command-line tool that generates Japanese text-to-speech audio and creates Ank
 - Anki with [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on installed
 - OpenAI API key (for translation)
 
-## Installation
-
-1. Clone this repository:
-
-   ```
-   git clone https://github.com/yourusername/kotobakit.git
-   cd kotobakit
-   ```
-
-2. Install the required dependencies:
-
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Set your OpenAI API key as an environment variable:
    ```
    export OPENAI_API_KEY=your_api_key_here
    ```
@@ -108,7 +92,3 @@ python -m unittest discover
 ## License
 
 MIT
-
-## Acknowledgements
-
-This project is a Python CLI rewrite of the original JavaScript implementation.
