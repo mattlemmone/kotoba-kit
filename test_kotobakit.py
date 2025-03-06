@@ -4,12 +4,14 @@ import tempfile
 from unittest.mock import patch, MagicMock
 
 import kotobakit
+from tts import TTSEngine
+from anki import AnkiConnector
 
 
 class TestKotobaKit(unittest.TestCase):
     """Test cases for the kotobakit module."""
 
-    @patch('kotobakit.tts.generate_audio')
+    @patch('tts.TTSEngine.generate_audio')
     def test_run_tts_command(self, mock_generate):
         """Test the TTS command."""
         # Mock the generate_audio function
@@ -25,7 +27,7 @@ class TestKotobaKit(unittest.TestCase):
         self.assertEqual(result, ["/tmp/test.mp3"])
 
     @patch('kotobakit.run_tts_command')
-    @patch('kotobakit.anki.process_audio_files')
+    @patch('anki.AnkiConnector.process_audio_files')
     def test_run_card_command_success(self, mock_process, mock_tts):
         """Test the card command with successful TTS."""
         # Mock the TTS command
@@ -59,7 +61,7 @@ class TestKotobaKit(unittest.TestCase):
         self.assertTrue(result)
 
     @patch('kotobakit.run_tts_command')
-    @patch('kotobakit.anki.process_audio_files')
+    @patch('anki.AnkiConnector.process_audio_files')
     def test_run_card_command_with_custom_translation(self, mock_process, mock_tts):
         """Test the card command with a custom translation."""
         # Mock the TTS command

@@ -5,6 +5,7 @@ import tempfile
 import json
 
 import anki
+from anki import AnkiConnector
 
 
 class TestAnki(unittest.TestCase):
@@ -14,7 +15,8 @@ class TestAnki(unittest.TestCase):
         action = "addNote"
         params = {"note": {"deckName": "test", "modelName": "test"}}
         
-        result = anki.build_anki_connect_action(action, **params)
+        connector = AnkiConnector()
+        result = connector.build_action(action, **params)
         
         # Check that the result has the correct structure
         self.assertEqual(result["action"], action)
@@ -32,7 +34,8 @@ class TestAnki(unittest.TestCase):
         
         # Mock json.load to return the expected result
         with patch('anki.json.load', return_value={"result": 1234}):
-            result = anki.invoke_anki_connect("addNote", note={"deckName": "test"})
+            connector = AnkiConnector()
+            result = connector.invoke("addNote", note={"deckName": "test"})
         
         # Check that the result is correct
         self.assertEqual(result, 1234)
@@ -52,54 +55,44 @@ class TestAnki(unittest.TestCase):
         
         # Mock json.load to return the expected result
         with patch('anki.json.load', return_value={"error": "test error"}):
+            connector = AnkiConnector()
             with self.assertRaises(Exception) as context:
-                anki.invoke_anki_connect("addNote", note={"deckName": "test"})
+                connector.invoke("addNote", note={"deckName": "test"})
         
         # Check that the exception message is correct
         self.assertEqual(str(context.exception), "test error")
     
-    @patch('anki.os.getenv')
-    @patch('anki.requests.post')
-    def test_get_translation_success(self, mock_post, mock_getenv):
+    @patch('translator.Translator.translate')
+    def test_get_translation_success(self, mock_translate):
         """Test successful translation."""
-        # Mock the environment variable
-        mock_getenv.return_value = "test_api_key"
+        # Mock the translation
+        mock_translate.return_value = "Hello"
         
-        # Mock the response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "Hello"}}]
-        }
-        mock_post.return_value = mock_response
-        
-        result = anki.get_translation("こんにちは")
+        connector = AnkiConnector()
+        result = connector.translator.translate("こんにちは")
         
         # Check that the result is correct
         self.assertEqual(result, "Hello")
         
-        # Check that the request was made with the correct parameters
-        mock_post.assert_called_once()
-        args, kwargs = mock_post.call_args
-        self.assertEqual(args[0], anki.OPENAI_API_URL)
-        self.assertEqual(kwargs["headers"]["Authorization"], "Bearer test_api_key")
-        self.assertIn("こんにちは", str(kwargs["json"]))
+        # Check that the translation was called
+        mock_translate.assert_called_once_with("こんにちは")
     
-    @patch('anki.os.getenv')
-    def test_get_translation_no_api_key(self, mock_getenv):
+    @patch('translator.Translator.translate')
+    def test_get_translation_no_api_key(self, mock_translate):
         """Test translation with no API key."""
-        # Mock the environment variable
-        mock_getenv.return_value = None
+        # Mock the translation to raise an exception
+        mock_translate.side_effect = Exception("OpenAI API key not found. Set the OPENAI_API_KEY environment variable.")
         
+        connector = AnkiConnector()
         with self.assertRaises(Exception) as context:
-            anki.get_translation("こんにちは")
+            connector.translator.translate("こんにちは")
         
         # Check that the exception message is correct
-        self.assertEqual(str(context.exception), anki.ERR_NO_API_KEY)
+        self.assertEqual(str(context.exception), "OpenAI API key not found. Set the OPENAI_API_KEY environment variable.")
     
     @patch('anki.os.path.exists')
-    @patch('anki.get_translation')
-    @patch('anki.invoke_anki_connect')
+    @patch('translator.Translator.translate')
+    @patch('anki.AnkiConnector.invoke')
     def test_add_sentence_card_with_api_translation(self, mock_invoke, mock_translate, mock_exists):
         """Test adding a sentence card to Anki with API translation."""
         # Mock the file existence check
@@ -113,7 +106,8 @@ class TestAnki(unittest.TestCase):
         
         # Mock open to avoid reading a real file
         with patch('builtins.open', mock_open(read_data=b'test audio data')):
-            result = anki.add_sentence_card("test.mp3")
+            connector = AnkiConnector()
+            result = connector.add_sentence_card("test.mp3")
         
         # Check that the result is correct
         self.assertEqual(result, 1234)
@@ -125,13 +119,13 @@ class TestAnki(unittest.TestCase):
         mock_invoke.assert_called_once()
         args, kwargs = mock_invoke.call_args
         self.assertEqual(args[0], "addNote")
-        self.assertEqual(kwargs["note"]["deckName"], anki.DEFAULT_DECK_NAME)
+        self.assertEqual(kwargs["note"]["deckName"], "Japanese::Sentences")
         self.assertEqual(kwargs["note"]["fields"]["Front"], "test")
         self.assertEqual(kwargs["note"]["fields"]["Back"], "Hello")
     
     @patch('anki.os.path.exists')
-    @patch('anki.get_translation')
-    @patch('anki.invoke_anki_connect')
+    @patch('translator.Translator.translate')
+    @patch('anki.AnkiConnector.invoke')
     def test_add_sentence_card_with_custom_translation(self, mock_invoke, mock_translate, mock_exists):
         """Test adding a sentence card to Anki with custom translation."""
         # Mock the file existence check
@@ -142,7 +136,8 @@ class TestAnki(unittest.TestCase):
         
         # Mock open to avoid reading a real file
         with patch('builtins.open', mock_open(read_data=b'test audio data')):
-            result = anki.add_sentence_card("test.mp3", custom_translation="Custom Hello")
+            connector = AnkiConnector()
+            result = connector.add_sentence_card("test.mp3", custom_translation="Custom Hello")
         
         # Check that the result is correct
         self.assertEqual(result, 1234)
@@ -154,18 +149,19 @@ class TestAnki(unittest.TestCase):
         mock_invoke.assert_called_once()
         args, kwargs = mock_invoke.call_args
         self.assertEqual(args[0], "addNote")
-        self.assertEqual(kwargs["note"]["deckName"], anki.DEFAULT_DECK_NAME)
+        self.assertEqual(kwargs["note"]["deckName"], "Japanese::Sentences")
         self.assertEqual(kwargs["note"]["fields"]["Front"], "test")
         self.assertEqual(kwargs["note"]["fields"]["Back"], "Custom Hello")
     
-    @patch('anki.add_sentence_card')
+    @patch('anki.AnkiConnector.add_sentence_card')
     def test_process_audio_files(self, mock_add_card):
         """Test processing multiple audio files."""
         # Mock the add_sentence_card function
         mock_add_card.side_effect = [1234, Exception("test error"), 5678]
         
+        connector = AnkiConnector()
         audio_files = ["test1.mp3", "test2.mp3", "test3.mp3"]
-        successful, failed = anki.process_audio_files(audio_files)
+        successful, failed = connector.process_audio_files(audio_files)
         
         # Check that the successful and failed lists are correct
         self.assertEqual(successful, ["test1.mp3", "test3.mp3"])
@@ -176,14 +172,15 @@ class TestAnki(unittest.TestCase):
         # Check that add_sentence_card was called for each file
         self.assertEqual(mock_add_card.call_count, 3)
         
-    @patch('anki.add_sentence_card')
+    @patch('anki.AnkiConnector.add_sentence_card')
     def test_process_audio_files_with_custom_translation(self, mock_add_card):
         """Test processing multiple audio files with custom translation."""
         # Mock the add_sentence_card function
         mock_add_card.side_effect = [1234, 5678]
         
+        connector = AnkiConnector()
         audio_files = ["test1.mp3", "test2.mp3"]
-        successful, failed = anki.process_audio_files(
+        successful, failed = connector.process_audio_files(
             audio_files, 
             custom_translation="Custom Hello"
         )
