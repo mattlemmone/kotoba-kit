@@ -20,7 +20,7 @@ class Config:
             "default_model": "Basic"
         },
         "openai": {
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-4o-mini",
             "system_prompt": "You are a translator. Translate the following Japanese text to English. Respond with only the translation."
         },
         "paths": {

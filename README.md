@@ -17,9 +17,9 @@ A command-line tool that generates Japanese text-to-speech audio and uses them t
 - Anki with [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on installed
 - OpenAI API key (for translation)
 
-   ```
-   export OPENAI_API_KEY=your_api_key_here
-   ```
+  ```
+  export OPENAI_API_KEY=your_api_key_here
+  ```
 
 ## Usage
 

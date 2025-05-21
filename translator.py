@@ -15,7 +15,9 @@ class Translator:
             config: Configuration dictionary
         """
         self.config = config or {}
-        self.model = self.config.get("model", "gpt-3.5-turbo")
+        self.model = self.config.get("model")
+        if not self.model:
+            raise ValueError("Translator requires a model to be specified in the configuration.")
         self.system_prompt = self.config.get(
             "system_prompt", 
             "You are a translator. Translate the following Japanese text to English. Respond with only the translation."
