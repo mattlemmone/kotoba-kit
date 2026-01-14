@@ -12,11 +12,12 @@ logger = logging.getLogger(__name__)
 class AnkiConnector:
     """Interface with Anki Connect API."""
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None, openai_model: Optional[str] = None):
         """Initialize the Anki connector.
         
         Args:
             config: Configuration dictionary
+            openai_model: Optional OpenAI model to use
         """
         self.config = config or {}
         self.host = self.config.get("host", "127.0.0.1")
@@ -24,8 +25,22 @@ class AnkiConnector:
         self.default_deck = self.config.get("default_deck", "Japanese::Sentences")
         self.default_model = self.config.get("default_model", "Basic")
         
-        # Create translator instance
-        translator_config = self.config.get("translator", {})
+        # Create translator instance with OpenAI configuration
+        logger.info("Initializing translator...")
+        
+        # Create a fresh config instance (should read environment variables)
+        from config import Config
+        cfg = Config()
+        translator_config = cfg.config.get("openai", {}).copy()
+        
+        # Apply model if provided
+        if openai_model:
+            translator_config["model"] = openai_model
+        
+        if not translator_config or not translator_config.get("model"):
+            raise ValueError("OpenAI configuration with model is required for translation")
+            
+        logger.info(f"Using openai config for translation: {translator_config}")
         self.translator = Translator(translator_config)
     
     def build_action(self, action: str, **params) -> Dict[str, Any]:

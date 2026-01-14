@@ -15,9 +15,12 @@ class Translator:
             config: Configuration dictionary
         """
         self.config = config or {}
+        
+        # Get model from config - no fallback
         self.model = self.config.get("model")
         if not self.model:
             raise ValueError("Translator requires a model to be specified in the configuration.")
+            
         self.system_prompt = self.config.get(
             "system_prompt", 
             "You are a translator. Translate the following Japanese text to English. Respond with only the translation."
@@ -71,9 +74,3 @@ class Translator:
         
         return response.json()['choices'][0]['message']['content'].strip()
 
-
-# For backward compatibility
-def translate(text: str) -> str:
-    """Legacy function for backward compatibility."""
-    translator = Translator()
-    return translator.translate(text) 

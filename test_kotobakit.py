@@ -19,7 +19,7 @@ class TestKotobaKit(unittest.TestCase):
         mock_generate.return_value = ["/tmp/test.mp3"]
         
         # Call the function
-        result = cli.run_tts_command(["test"], "/tmp")
+        result = cli.run_tts_command(["test"], "/tmp", None, None, None)
         
         # Check that generate_audio was called with the right parameters
         mock_generate.assert_called_once_with(["test"], "/tmp")
@@ -45,11 +45,15 @@ class TestKotobaKit(unittest.TestCase):
             "test_deck", 
             "test_model", 
             None, 
-            False
+            False,
+            None,  # openai_model
+            None,  # voice
+            None,  # speed
+            None   # pitch
         )
         
         # Check that run_tts_command was called with the right parameters
-        mock_tts.assert_called_once_with(["test"], "/tmp")
+        mock_tts.assert_called_once_with(["test"], "/tmp", None, None, None)
         
         # Check that process_audio_files was called with the right parameters
         mock_anki_instance.process_audio_files.assert_called_once_with(
@@ -80,11 +84,15 @@ class TestKotobaKit(unittest.TestCase):
             "test_deck", 
             "test_model", 
             "Custom Hello", 
-            False
+            False,
+            None,  # openai_model
+            None,  # voice
+            None,  # speed
+            None   # pitch
         )
         
         # Check that run_tts_command was called with the right parameters
-        mock_tts.assert_called_once_with(["test"], "/tmp")
+        mock_tts.assert_called_once_with(["test"], "/tmp", None, None, None)
         
         # Check that process_audio_files was called with the right parameters
         mock_anki_instance.process_audio_files.assert_called_once_with(
@@ -110,7 +118,11 @@ class TestKotobaKit(unittest.TestCase):
             "test_deck", 
             "test_model", 
             None, 
-            False
+            False,
+            None,  # openai_model
+            None,  # voice
+            None,  # speed
+            None   # pitch
         )
         
         # Check that the result is False
@@ -124,6 +136,9 @@ class TestKotobaKit(unittest.TestCase):
             mock_args.command = "tts"
             mock_args.phrases = ["こんにちは"]
             mock_args.output_dir = "/tmp"
+            mock_args.voice = None
+            mock_args.speed = None
+            mock_args.pitch = None
             mock_parse_args.return_value = mock_args
             
             # Mock the TTS command function
@@ -132,7 +147,7 @@ class TestKotobaKit(unittest.TestCase):
                 result = kotobakit.main()
                 
                 # Check that run_tts_command was called with the right parameters
-                mock_tts.assert_called_once_with(["こんにちは"], "/tmp")
+                mock_tts.assert_called_once_with(["こんにちは"], "/tmp", None, None, None)
                 
                 # Check that the result is 0 (success)
                 self.assertEqual(result, 0)
@@ -149,6 +164,10 @@ class TestKotobaKit(unittest.TestCase):
             mock_args.model = "test_model"
             mock_args.translation = "Custom Hello"
             mock_args.keep_audio = True
+            mock_args.openai_model = None
+            mock_args.voice = None
+            mock_args.speed = None
+            mock_args.pitch = None
             mock_parse_args.return_value = mock_args
             
             # Mock the card command function
@@ -163,7 +182,11 @@ class TestKotobaKit(unittest.TestCase):
                     "test_deck", 
                     "test_model", 
                     "Custom Hello", 
-                    True
+                    True,
+                    None,  # openai_model
+                    None,  # voice
+                    None,  # speed
+                    None   # pitch
                 )
                 
                 # Check that the result is 0 (success)
